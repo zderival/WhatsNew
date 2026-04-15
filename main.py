@@ -2,8 +2,6 @@ import Login
 import NewsManagment
 from Login import User, cursor, conn
 import Profile
-import Homepage
-import SavedArticlesPage
 from NewsManagment import NewsManager, api_url2, articles_isEmpty
 from Recomendations import fetch_articles, get_recommendations, fetch_potential_articles
 
