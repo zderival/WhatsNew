@@ -1,2 +1,5 @@
 flask.py
 usa_housing_prices.csv
+Homepage.py
+SearchPage.py
+SavedArticlesPage.py
