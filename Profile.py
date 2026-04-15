@@ -11,6 +11,7 @@ class Profile:
         self.article_preferences = []
         self.saved_articles = []
         self.new_manager = NewsManager()
+        self.page_size = 20
 
     def change_email(self,cursor,conn):
         while True:
@@ -38,6 +39,7 @@ class Profile:
     def change_password(self,cursor,conn):
         class InvalidPasswordChange(Exception):
             pass
+        attempts = 0
         sql = """ SELECT email FROM "user" WHERE id = %s; """
         cursor.execute(sql,(self.id,))
         result = cursor.fetchone()
@@ -118,6 +120,18 @@ class Profile:
         print("Account deleted")
         return True
 
+    def change_page_size(self):
+        while True:
+            try:
+                size = int(input("How many articles would you like to see at a time? (1-100): "))
+                if 1 <= size <= 100:
+                    self.page_size = size
+                    print(f"Updated. You'll now see {size} articles at a time.")
+                    break
+                else:
+                    print("Please enter a number between 1 and 100.")
+            except ValueError:
+                print("Please enter a valid number.")
 
 def forgot_password(cursor,conn):
     class InvalidPasswordChange(Exception):
@@ -164,7 +178,7 @@ def forgot_password(cursor,conn):
 def forgot_username(cursor,conn):
     class InvalidUserSetup(Exception):
         pass
-    email = input("Enter email: ")
+    email = input("Enter email: ").strip()
     sql = """SELECT * FROM "user" WHERE email = %s;"""
     cursor.execute(sql,(email,))
     user = cursor.fetchone()
@@ -197,3 +211,4 @@ def forgot_username(cursor,conn):
     cursor.execute(sql, (username, email))
     conn.commit()
     print("Your username has been updated.")
+

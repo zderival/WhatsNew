@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 from dateutil import parser
 import os
+import pandas as pd
 api_key = os.getenv("NEWS_API_KEY")
 
 api_url = f"https://newsapi.org/v2/everything?q=keyword&apiKey={api_key}"
@@ -29,9 +30,12 @@ class Article:
 
 
 # Fetches articles from API
-def fetch_articles(url, params = None):
+def fetch_articles(url, params= None, page_size=20):
+    if params is None:
+        params = {}
     global total_number_of_articles_fetched
     articles = []
+    params["pageSize"] = page_size
     response = requests.get(url, headers=headers, params = params)
     data = response.json()
     for article_data in data.get("articles", []):
@@ -49,11 +53,20 @@ def fetch_articles(url, params = None):
     total_number_of_articles_fetched = data.get("totalResults", 0)
     return articles
 
+def articles_to_df(articles):
+    data = {
+        "title": [a.title for a in articles],
+        "source": [a.source for a in articles],
+        "article": articles
+    }
+    df = pd.DataFrame(data)
+    df["combined"] = df["title"] + " " + df["source"]
+    return df
 #Dict for finding specific articles
 ids = {}
-def print_article(url, params = None):
+def print_article(url, params = None, page_size = 20):
     #Holds all articles that were fetched
-    articles = fetch_articles(url, params)
+    articles = fetch_articles(url, params, page_size)
     for i, article in enumerate(articles,start=1):
         print(f"{i}) {article}")
         ids[i] = article
@@ -83,7 +96,6 @@ def prompt_articles_save(articles, user):
             print("Invalid input. Please enter numbers only.")
     else:
         print("No articles saved.")
-
 class NewsManager:
     def __init__(self):
         pass
@@ -159,13 +171,11 @@ class NewsManager:
                 print(f"Article number {num} does not exist.")
 
     @staticmethod
-    def search_articles(search):
+    def search_articles(search, page_size = 20):
         search = search.strip()
         url = f"https://newsapi.org/v2/everything"
         params = {"q": search,
                   "apikey": api_key,
                   }
-        return print_article(url,params)
-
-
+        return print_article(url,params, page_size)
 

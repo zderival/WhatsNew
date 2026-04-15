@@ -5,6 +5,7 @@ import Profile
 import Homepage
 import SavedArticlesPage
 from NewsManagment import NewsManager, api_url2, articles_isEmpty
+from Recomendations import fetch_articles, get_recommendations, fetch_potential_articles
 
 if __name__ == "__main__":
     deleted = False
@@ -71,13 +72,13 @@ if __name__ == "__main__":
             match option:
                 case 1:
                     print("Latest news: ")
-                    articles = NewsManagment.print_article(api_url2)
+                    articles = NewsManagment.print_article(api_url2, page_size=user.profile.page_size)
                     NewsManagment.prompt_articles_save(articles, user)
                     continue
                 case 2:
                     search = input("What would you like to find? ")
-                    articles = user.profile.new_manager.search_articles(search)
-                    NewsManagment.prompt_articles_save(articles, user)
+                    articles = user.profile.new_manager.search_articles(search,user.profile.page_size)
+                    NewsManagment.prompt_articles_save(articles, user,)
                 case 3:
                     while True:
                         if NewsManagment.articles_isEmpty(user.profile.saved_articles,user):
@@ -96,8 +97,16 @@ if __name__ == "__main__":
                     if articles_isEmpty(user.profile.article_preferences,user):
                         print("Your preference list is empty. Please enter your preferences in option 5,", end= " ")
                         print("So we can fetch proper recommendations for you.")
-                        break
-
+                        continue
+                    print("Fetching Recommendations...")
+                    potential_articles = fetch_potential_articles(user.profile.article_preferences,user.profile.page_size)
+                    recommendations = get_recommendations(user.profile.saved_articles,potential_articles)
+                    if not recommendations:
+                        print("No recommendations found")
+                        continue
+                    for i, article in enumerate(recommendations,start =1):
+                        print(f"{i}) {article}")
+                    NewsManagment.prompt_articles_save((recommendations,{}),user)
                 case 5:
                     preferences = input("What types of articles do you wish to see (comma separated): ").lower().strip().split(",")
                     user.profile.article_preferences = preferences
@@ -113,7 +122,9 @@ if __name__ == "__main__":
                         print()
                         print("4) Delete Account")
                         print()
-                        print("5) Back")
+                        print("5) Change Page Size")
+                        print()
+                        print("6) Back")
                         options = int(input("Select option: "))
                         match options:
                             case 1:
@@ -140,6 +151,9 @@ if __name__ == "__main__":
                                 if deleted:
                                     break  # breaks dashboard loop
                             case 5:
+                                user.profile.change_page_size()
+                                continue
+                            case 6:
                                 break
                 case 7:
                     break
