@@ -4,7 +4,8 @@ from Login import User, cursor, conn
 import Profile
 from NewsManagment import NewsManager, api_url2, articles_isEmpty
 from Recomendations import get_recommendations, fetch_potential_articles
-
+from dotenv import load_dotenv
+load_dotenv()
 if __name__ == "__main__":
     deleted = False
     while True:
