@@ -172,9 +172,6 @@ def forgot_password(cursor,conn):
         except InvalidPasswordChange as e:
             print(e)
 
-    def forgot_username(self,cursor,conn):
-        email = input("Enter email: ")
-
 def forgot_username(cursor,conn):
     class InvalidUserSetup(Exception):
         pass

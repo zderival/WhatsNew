@@ -70,13 +70,13 @@ if __name__ == "__main__":
             match option:
                 case 1:
                     print("Latest news: ")
-                    articles = NewsManagment.print_article(api_url2, page_size= user.profile.page_size)
-                    NewsManagment.prompt_articles_save(articles, user)
+                    articles, ids = NewsManagment.print_article(api_url2, page_size= user.profile.page_size)
+                    NewsManagment.prompt_articles_save(ids, user)
                     continue
                 case 2:
                     search = input("What would you like to find? ")
-                    articles = user.profile.new_manager.search_articles(search,user.profile.page_size)
-                    NewsManagment.prompt_articles_save(articles, user,)
+                    articles, ids = user.profile.new_manager.search_articles(search,user.profile.page_size)
+                    NewsManagment.prompt_articles_save(ids, user,)
                 case 3:
                     while True:
                         if NewsManagment.articles_isEmpty(user.profile.saved_articles,user):
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                     for i, article in enumerate(recommendations,start =1):
                         print(f"{i}) {article}")
                     rec_ids = {i: article for i, article in enumerate(recommendations, start=1)}
-                    NewsManagment.prompt_articles_save((recommendations, rec_ids),user)
+                    NewsManagment.prompt_articles_save(rec_ids,user)
                 case 5:
                     preferences = input("What types of articles do you wish to see (comma separated): ").lower().strip().split(",")
                     user.profile.article_preferences = preferences

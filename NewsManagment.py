@@ -78,7 +78,7 @@ def articles_isEmpty(user_list,user):
         return True
     else: return False
 
-def prompt_articles_save(articles, user):
+def prompt_articles_save(ids_dict, user):
     ask_to_save_articles = input("Are there articles you wish to save? (yes/no): ").strip().lower()
     save_article_choice = []
 
@@ -88,7 +88,7 @@ def prompt_articles_save(articles, user):
             save_article_choice = [int(x) for x in choices_input.split()]
 
             if save_article_choice:
-                user.profile.new_manager.save_articles(save_article_choice, user)
+                user.profile.new_manager.save_articles(save_article_choice,ids_dict, user)
             else:
                 print("No valid article numbers entered.")
 
@@ -141,8 +141,7 @@ class NewsManager:
         pass
 
     @staticmethod
-    def save_articles(choice_list,user):
-        global num
+    def save_articles(choice_list,ids,user):
         for num in choice_list:
             if num in ids:
                 article = ids[num]
