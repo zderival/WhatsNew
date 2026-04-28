@@ -89,8 +89,6 @@ if __name__ == "__main__":
                         if save_article_choice == "no":
                             break
                         user.profile.new_manager.remove_articles(save_article_choice,user)
-                        for i, article in enumerate(user.profile.saved_articles, start=1):
-                            print(f"{i}. {article}")
                         continue
                 case 4:
                     if articles_isEmpty(user.profile.article_preferences,user):

@@ -63,7 +63,7 @@ def get_recommendations(saved_articles,potential_articles):
     saved_vectors = tfidf_matrix[:len(saved_articles_df)]
     potential_vectors = tfidf_matrix[len(saved_articles_df):]
     # Slicing the matrix between the saved articles df and everything after that (potential articles df)
-    # In my case after TF-IDF runs, each article becomes a vector.
+    # In my case, after TF-IDF runs, each article becomes a vector.
     # A vector is just a list of numbers that represents something.
     # Each number in that list corresponds to a word in the vocabulary.
     # The 0s mean that word doesn't appear in the article. The non-zero numbers represent how important that word is to that article.
