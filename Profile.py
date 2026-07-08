@@ -1,8 +1,19 @@
 import os
 import shutil
+
+from psycopg2.extras import RealDictCursor
+
 from NewsManagment import NewsManager
 from Email_Maintance import send_verification_code
 import Password_Security
+import db
+
+
+class InvalidUserSetup(Exception):
+    pass
+class InvalidPasswordChange(Exception):
+    pass
+
 class Profile:
     def __init__(self, id, profile_pic = None,display_color = None):
         self.id = id
@@ -13,7 +24,10 @@ class Profile:
         self.new_manager = NewsManager()
         self.page_size = 20
 
-    def change_email(self,cursor,conn):
+
+    def change_email(self):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory= RealDictCursor)
         while True:
             new_email = input("Enter new email: ").strip()
             if "@" not in new_email or "." not in new_email:
@@ -36,10 +50,9 @@ class Profile:
         conn.commit()
         print("Your email has changed")
 
-    def change_password(self,cursor,conn):
-        class InvalidPasswordChange(Exception):
-            pass
-        attempts = 0
+    def change_password(self):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory= RealDictCursor)
         sql = """ SELECT email FROM "user" WHERE id = %s; """
         cursor.execute(sql,(self.id,))
         result = cursor.fetchone()
@@ -90,9 +103,9 @@ class Profile:
         shutil.copy(file_path, destination_path)
         self.profile_pic = user_pic
 
-    def change_username(self,user,cursor,conn):
-        class InvalidUserSetup(Exception):
-            pass
+    def change_username(self,user):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory= RealDictCursor)
         while True:
             try:
                 new_username = input("Enter new username: ").strip()
@@ -113,7 +126,9 @@ class Profile:
         user.username = new_username
         print("Username changed")
 
-    def delete_profile(self,cursor,conn):
+    def delete_profile(self):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         sql = """DELETE FROM "user" WHERE id = %s;"""
         cursor.execute(sql,(self.id,))
         conn.commit()
@@ -133,9 +148,9 @@ class Profile:
             except ValueError:
                 print("Please enter a valid number.")
 
-def forgot_password(cursor,conn):
-    class InvalidPasswordChange(Exception):
-        pass
+def forgot_password():
+    conn = db.get_connection()
+    cursor = conn.cursor(cursor_factory= RealDictCursor)
     username_email = input('Enter your username/email: ').strip()
     sql = 'SELECT * FROM "user" WHERE username = %s OR email = %s;'
     cursor.execute(sql, (username_email, username_email))
@@ -172,9 +187,9 @@ def forgot_password(cursor,conn):
         except InvalidPasswordChange as e:
             print(e)
 
-def forgot_username(cursor,conn):
-    class InvalidUserSetup(Exception):
-        pass
+def forgot_username():
+    conn = db.get_connection()
+    cursor = conn.cursor(cursor_factory= RealDictCursor)
     email = input("Enter email: ").strip()
     sql = """SELECT * FROM "user" WHERE email = %s;"""
     cursor.execute(sql,(email,))

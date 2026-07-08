@@ -63,54 +63,24 @@ def articles_to_df(articles):
     df["combined"] = df["title"] + " " + df["source"]
     return df
 #Dict for finding specific articles
-ids = {}
-def print_article(url, params = None, page_size = 20):
-    #Holds all articles that were fetched
-    articles = fetch_articles(url, params, page_size)
-    for i, article in enumerate(articles,start=1):
-        print(f"{i}) {article}")
-        ids[i] = article
-    print(f"{len(articles)} articles found")
-    return articles, ids
+
 
 def articles_isEmpty(user_list,user):
     if len(user_list) == 0:
         return True
     else: return False
 
-def prompt_articles_save(ids_dict, user):
-    ask_to_save_articles = input("Are there articles you wish to save? (yes/no): ").strip().lower()
-    save_article_choice = []
-
-    if ask_to_save_articles == "yes":
-        try:
-            choices_input = input("Enter the numbers of the articles you wish to save (separated by spaces): ").strip()
-            save_article_choice = [int(x) for x in choices_input.split()]
-
-            if save_article_choice:
-                user.profile.new_manager.save_articles(save_article_choice,ids_dict, user)
-            else:
-                print("No valid article numbers entered.")
-
-        except ValueError:
-            print("Invalid input. Please enter numbers only.")
-    else:
-        print("No articles saved.")
 class NewsManager:
     def __init__(self):
         pass
 
     @staticmethod
+    # will return saved preference data from DB
     def filter_topics(user_list):
         user_topics = user_list
-        preferred_articles = [] #Save for ML/AI recommendations later
         formatted = [topic.title() for topic in user_topics]
         output = ",".join(formatted)
-        if len(user_topics) == 1:
-            print(f"{output} is your preference")
-        else:
-            print(f"{output} are your preferences")
-        return preferred_articles
+        return output
 
     @staticmethod
     def filter_by_date(articles, time_range):
@@ -174,7 +144,7 @@ class NewsManager:
         search = search.strip()
         url = f"https://newsapi.org/v2/everything"
         params = {"q": search,
-                  "apikey": api_key,
+                  "apiKey": api_key,
                   }
-        return print_article(url,params, page_size)
+        return fetch_articles(url,params, page_size)
 

@@ -1,11 +1,26 @@
 import Login
 import NewsManagment
-from Login import User, cursor, conn
 import Profile
 from NewsManagment import NewsManager, api_url2, articles_isEmpty
 from Recomendations import get_recommendations, fetch_potential_articles
 from dotenv import load_dotenv
 load_dotenv()
+def prompt_save_articles(ids,user):
+    ask_to_save_articles = input("Are there articles you wish to save? (yes/no): ").strip().lower()
+    if ask_to_save_articles == "yes":
+        try:
+            choices_input = input("Enter the numbers of the articles you wish to save (separated by spaces): ").strip()
+            save_article_choice = [int(x) for x in choices_input.split()]
+            if save_article_choice:
+                NewsManager.save_articles(save_article_choice, ids, user)
+                print(f"{len(save_article_choice)} articles saved to your profile!")
+            else:
+                print("No valid article numbers entered.")
+        except ValueError:
+            print("Invalid input. Please enter numbers only.")
+    else:
+        print("No articles saved.")
+
 if __name__ == "__main__":
     deleted = False
     while True:
@@ -26,17 +41,17 @@ if __name__ == "__main__":
                 print("Invalid input please try again")
                 continue
             if choice == 1:
-                user: User = Login.login()
+                user: Login.User = Login.login()
                 if user is None:
                     continue
             elif choice == 2:
                 Login.create_account()
                 continue
             elif choice == 3:
-                Profile.forgot_password(cursor,conn)
+                Profile.forgot_password()
                 continue
             elif choice == 4:
-                Profile.forgot_username(cursor,conn)
+                Profile.forgot_username()
                 continue
             elif choice == 5:
                 exit()
@@ -71,13 +86,23 @@ if __name__ == "__main__":
             match option:
                 case 1:
                     print("Latest news: ")
-                    articles, ids = NewsManagment.print_article(api_url2, page_size= user.profile.page_size)
-                    NewsManagment.prompt_articles_save(ids, user)
+                    articles = NewsManagment.fetch_articles(api_url2,page_size=user.profile.page_size)
+                    ids = {}
+                    for i, article in enumerate(articles, start=1):
+                        print(f"{i}) {article}")
+                        ids[i] = article
+                    print(f"{len(articles)} articles found")
+                    prompt_save_articles(ids, user)
                     continue
                 case 2:
                     search = input("What would you like to find? ")
-                    articles, ids = user.profile.new_manager.search_articles(search,user.profile.page_size)
-                    NewsManagment.prompt_articles_save(ids, user,)
+                    ids = {}
+                    articles = NewsManager.search_articles(search,user.profile.page_size)
+                    for i, article in enumerate(articles, start=1):
+                        print(f"{i}) {article}")
+                        ids[i] = article
+                    print(f"{len(articles)} articles found")
+                    prompt_save_articles(ids, user)
                 case 3:
                     while True:
                         if NewsManagment.articles_isEmpty(user.profile.saved_articles,user):
@@ -104,11 +129,15 @@ if __name__ == "__main__":
                     for i, article in enumerate(recommendations,start =1):
                         print(f"{i}) {article}")
                     rec_ids = {i: article for i, article in enumerate(recommendations, start=1)}
-                    NewsManagment.prompt_articles_save(rec_ids,user)
+                    prompt_save_articles(rec_ids, user)
                 case 5:
                     preferences = input("What types of articles do you wish to see (comma separated): ").lower().strip().split(",")
                     user.profile.article_preferences = preferences
-                    user.profile.new_manager.filter_topics(user.profile.article_preferences)
+                    result = NewsManager.filter_topics(user.profile.article_preferences)
+                    if len(user.profile.article_preferences) == 1:
+                        print(f"{result} is your preference")
+                    else:
+                        print(f"{result} are your preferences")
                     continue
                 case 6:
                     while True:
@@ -126,20 +155,20 @@ if __name__ == "__main__":
                         options = int(input("Select option: "))
                         match options:
                             case 1:
-                                user.profile.change_email(cursor,conn)
+                                user.profile.change_email()
                                 continue
                             case 2:
-                                user.profile.change_password(cursor,conn)
+                                user.profile.change_password()
                                 continue
                             case 3:
-                                user.profile.change_username(user,cursor,conn)
+                                user.profile.change_username(user)
                                 continue
                             case 4:
                                 while True:
                                     confirm = input(
                                         "Are you sure? All data will be deleted. (Type yes or no): ").lower()
                                     if confirm == "yes":
-                                        user.profile.delete_profile(cursor, conn)
+                                        user.profile.delete_profile()
                                         deleted = True
                                         break
                                     elif confirm == "no":

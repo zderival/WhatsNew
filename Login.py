@@ -1,12 +1,11 @@
-import os
 from datetime import datetime
 import time
 import uuid
 from psycopg2.extras import RealDictCursor, register_uuid
 from Profile import Profile
 import threading
-import psycopg2
 import Password_Security
+import db
 class User:
     def __init__(self, id, dob, username, password, email, new_user = True):
         # Every user has these specific traits to themselves
@@ -17,21 +16,12 @@ class User:
         self.email = email
         self.newUser = new_user
         self.profile = Profile(id)
-class InvalidUserException(Exception):
+class InvalidUserSetup(Exception):
     pass
-
 #Password Security
 
 email_domains = ["gmail.com","outlook.com","hotmail.com","yahoo.com"]
 
-conn = psycopg2.connect(
-    host = "localhost",
-    database = "whats_new",
-    user = "zach",
-    password = os.getenv("Database_Password")
-)
-
-cursor = conn.cursor(cursor_factory= RealDictCursor)
 register_uuid()
 
 def generate_id():
@@ -48,8 +38,8 @@ def cooldown(duration):
     print("You can try logging in again now!")
 
 def create_account():
-    class InvalidUserSetup(Exception):
-        pass
+    conn = db.get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     username = ""
     while True:
         print()
@@ -140,6 +130,8 @@ def create_account():
 
 def login():
     print()
+    conn = db.get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     print("(Login)")
     user = None
     if cooldown_active:
