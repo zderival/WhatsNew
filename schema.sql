@@ -1,0 +1,2 @@
+whats_new=> CREATE TABLE user_prefrences(id UUID PRIMARY KEY, user_id UUID REFERENCES "user"(id), topic TEXT);           
+whats_new=> CREATE TABLE saved_article( id UUID PRIMARY KEY, user_id UUID REFERENCES "user"(id), title TEXT, source TEXT, url TEXT, UNIQUE (user_id,url));

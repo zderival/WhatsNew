@@ -1,7 +1,8 @@
+
 import Login
 import NewsManagment
 import Profile
-from NewsManagment import NewsManager, api_url2, articles_isEmpty
+from NewsManagment import NewsManager, api_url2, articles_isEmpty, Article
 from Recomendations import get_recommendations, fetch_potential_articles
 from dotenv import load_dotenv
 load_dotenv()
@@ -105,24 +106,46 @@ if __name__ == "__main__":
                     prompt_save_articles(ids, user)
                 case 3:
                     while True:
-                        if NewsManagment.articles_isEmpty(user.profile.saved_articles,user):
+                        user_saved_articles = NewsManager.get_saved_articles(user.id)
+                        if NewsManagment.articles_isEmpty(user_saved_articles):
                             print("Your list is empty")
                             break
-                        for i, article in enumerate(user.profile.saved_articles, start=1):
-                            print(f"{i}. {article}")
+                        ids = {}
+                        for i, article in enumerate(user_saved_articles, start=1):
+                            print(f"{i}. {article['title']}\n{article['source']}\n{article['url']}\n")
+                            ids[i] = article["id"]
                         save_article_choice = input("Enter spaced article numbers to remove OR type 'no' to go back: ").strip().lower()
                         if save_article_choice == "no":
                             break
-                        user.profile.new_manager.remove_articles(save_article_choice,user)
+                        NewsManager.remove_articles(save_article_choice,ids)
                         continue
                 case 4:
-                    if articles_isEmpty(user.profile.article_preferences,user):
-                        print("Your preference list is empty. Please enter your preferences in option 5,", end= " ")
+                    if articles_isEmpty(NewsManager.get_preferences(user.id)):
+                        print("Your preference list is empty.\nPlease enter your preferences in option 5,", end= " ")
                         print("So we can fetch proper recommendations for you.")
                         continue
                     print("Fetching Recommendations...")
-                    potential_articles = fetch_potential_articles(user.profile.article_preferences,user.profile.page_size)
-                    recommendations = get_recommendations(user.profile.saved_articles,potential_articles)
+                    get_saved_articles = NewsManager.get_saved_articles(user.id)
+                    get_preferences = NewsManager.get_preferences(user.id)
+                    saved_articles_list = []
+                    preferences_list = []
+                    for articles in get_saved_articles:
+                        article = Article(
+                            id = articles["id"],
+                            title = articles["title"],
+                            source= articles["source"],
+                            publishedAt= None,
+                            url = articles["url"],
+                            topic= None,
+                            author= None
+                        )
+                        saved_articles_list.append(article)
+
+                    for articles in get_preferences:
+                        preferences_list.append(articles["topic"])
+
+                    potential_articles = fetch_potential_articles(preferences_list,user.profile.page_size)
+                    recommendations = get_recommendations(saved_articles_list,potential_articles)
                     if not recommendations:
                         print("No recommendations found")
                         continue
@@ -132,9 +155,9 @@ if __name__ == "__main__":
                     prompt_save_articles(rec_ids, user)
                 case 5:
                     preferences = input("What types of articles do you wish to see (comma separated): ").lower().strip().split(",")
-                    user.profile.article_preferences = preferences
-                    result = NewsManager.filter_topics(user.profile.article_preferences)
-                    if len(user.profile.article_preferences) == 1:
+                    NewsManager.update_preferences(preferences,user.id)
+                    result = NewsManager.filter_topics(preferences)
+                    if len(preferences) == 1:
                         print(f"{result} is your preference")
                     else:
                         print(f"{result} are your preferences")
