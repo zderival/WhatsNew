@@ -1,7 +1,13 @@
+import datetime
+import uuid
+import webbrowser
+
+from psycopg2.extras import RealDictCursor
 
 import Login
 import NewsManagment
 import Profile
+import db
 from NewsManagment import NewsManager, api_url2, articles_isEmpty, Article
 from Recomendations import get_recommendations, fetch_potential_articles
 from dotenv import load_dotenv
@@ -21,6 +27,31 @@ def prompt_save_articles(ids,user):
             print("Invalid input. Please enter numbers only.")
     else:
         print("No articles saved.")
+
+def prompt_open_article(ids,user):
+    conn = db.get_connection()
+    cursor = conn.cursor(cursor_factory= RealDictCursor)
+    while True:
+        prompt = input("Would you like to open an article (yes/no): ").strip().lower()
+        try:
+            if prompt == "yes":
+                    article_selection = int(input("Enter article number would you like to read: "))
+                    if article_selection in ids:
+                        article_selected = ids[article_selection]
+                        webbrowser.open(article_selected.url)
+                        sql = """
+                        INSERT INTO read_articles(id,user_id,source,url,read_at)
+                            VALUES (%s,%s,%s,%s,%s)
+                        """
+                        cursor.execute(sql,(uuid.uuid4(), user.id, article_selected.source, article_selected.url,datetime.datetime.now()))
+                        conn.commit()
+                    else:
+                        print("Article entered not shown, please try again.")
+            elif prompt == "no":
+                break
+        except ValueError:
+            print("Invalid input, please try again.")
+
 
 if __name__ == "__main__":
     deleted = False
@@ -81,7 +112,9 @@ if __name__ == "__main__":
             print()
             print("7) Logout")
             print()
-            print("8) Exit")
+            print("8) Wrapped")
+            print()
+            print("9) Exit")
             option = int(input("Select Option: "))
 
             match option:
@@ -93,28 +126,53 @@ if __name__ == "__main__":
                         print(f"{i}) {article}")
                         ids[i] = article
                     print(f"{len(articles)} articles found")
+                    prompt_open_article(ids, user)
                     prompt_save_articles(ids, user)
                     continue
                 case 2:
+                    conn = db.get_connection()
+                    cursor = conn.cursor(cursor_factory= RealDictCursor)
                     search = input("What would you like to find? ")
                     ids = {}
                     articles = NewsManager.search_articles(search,user.profile.page_size)
+                    sql = """
+                    INSERT INTO search_history(id, user_id, keyword, searched_at)
+                        VALUES (%s, %s,%s,%s)
+                    """
+                    cursor.execute(sql,(uuid.uuid4(),user.id,search,datetime.datetime.now()))
+                    conn.commit()
                     for i, article in enumerate(articles, start=1):
                         print(f"{i}) {article}")
                         ids[i] = article
                     print(f"{len(articles)} articles found")
+
+                    prompt_open_article(ids, user)
                     prompt_save_articles(ids, user)
                 case 3:
                     while True:
                         user_saved_articles = NewsManager.get_saved_articles(user.id)
+                        articles_object_list = []
                         if NewsManagment.articles_isEmpty(user_saved_articles):
                             print("Your list is empty")
                             break
                         ids = {}
                         for i, article in enumerate(user_saved_articles, start=1):
+                            articles = Article(
+                                id = article["id"],
+                                title= article["title"],
+                                source= article["source"],
+                                publishedAt= None,
+                                url= article["url"],
+                                topic= None,
+                                author= None
+                            )
+                            articles_object_list.append(articles)
                             print(f"{i}. {article['title']}\n{article['source']}\n{article['url']}\n")
-                            ids[i] = article["id"]
-                        save_article_choice = input("Enter spaced article numbers to remove OR type 'no' to go back: ").strip().lower()
+
+                            ids[i] = articles
+                        prompt_open_article(ids, user)
+                        save_article_choice = input("Enter spaced article numbers to remove OR type 'no' if you "
+                                                    "do not wish to remove articles: ").strip().lower()
                         if save_article_choice == "no":
                             break
                         NewsManager.remove_articles(save_article_choice,ids)
@@ -152,6 +210,7 @@ if __name__ == "__main__":
                     for i, article in enumerate(recommendations,start =1):
                         print(f"{i}) {article}")
                     rec_ids = {i: article for i, article in enumerate(recommendations, start=1)}
+                    prompt_open_article(rec_ids, user)
                     prompt_save_articles(rec_ids, user)
                 case 5:
                     preferences = input("What types of articles do you wish to see (comma separated): ").lower().strip().split(",")
@@ -208,6 +267,29 @@ if __name__ == "__main__":
                 case 7:
                     break
                 case 8:
+                    print("Data based of your WhatsNew activity: ")
+                    print()
+                    print("Total amount of saved articles: ")
+                    print(NewsManager.all_saved_articles(user.id))
+                    print()
+                    print("Total articles read: ")
+                    print(NewsManager.get_total_read_articles(user.id))
+                    print()
+                    print("Most saved article source: ")
+                    print(NewsManager.get_most_saved_source(user.id))
+                    print()
+                    print("Most searched keyword: ")
+                    print(NewsManager.most_searched_keyword(user.id))
+                    print()
+                    print("Most read source: ")
+                    print(NewsManager.get_most_read_source(user.id))
+                    while True:
+                        back = input("Type input \"back\" to exit: ").lower()
+                        if back == "back":
+                            break
+                        else:
+                            continue
+                case 9:
                     exit()
                 case _:
                     print("Please type the available options.")

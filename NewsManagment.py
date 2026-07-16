@@ -134,8 +134,6 @@ class NewsManager:
             else:
                 print(f"Article number {num} does not exist.")
         conn.commit()
-        print(f"{len(choice_list)} articles saved to your profile!")
-
         #you're looking through the list to read the values of ids that the user wanted to save
 
         # Articles - articles that were fetched to get a list of articles
@@ -157,12 +155,12 @@ class NewsManager:
                 sql = """
                 DELETE FROM saved_article WHERE id = %s
                 """
-                cursor.execute(sql,(ids[num],))
+                cursor.execute(sql,(ids[num].id,))
             else:
                 print(f"Article number {num} does not exist.")
         conn.commit()
     @staticmethod
-    def search_articles(search, page_size = 20):
+    def search_articles(search, page_size):
         search = search.strip()
         url = f"https://newsapi.org/v2/everything"
         params = {"q": search,
@@ -206,3 +204,72 @@ class NewsManager:
         cursor.execute(sql,(user_id,))
         fetch = cursor.fetchall()
         return fetch
+    @staticmethod
+    def all_saved_articles(user_id):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory= RealDictCursor)
+
+        sql = """
+        SELECT COUNT(*) FROM saved_article WHERE user_id = %s
+                """
+        cursor.execute(sql,(user_id,))
+        return cursor.fetchone()["count"]
+
+    @staticmethod
+    def get_most_saved_source(user_id):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory= RealDictCursor)
+
+        sql = """
+              SELECT source, COUNT(*) AS count FROM saved_article WHERE user_id = %s GROUP BY(source) ORDER BY count DESC LIMIT 1;
+              """
+        cursor.execute(sql,(user_id,))
+        fetch = cursor.fetchone()
+        if fetch is None:
+            fetch = "No data found"
+            return fetch
+        else:
+            return fetch["source"]
+
+    @staticmethod
+    def get_total_read_articles(user_id):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+
+        sql = """
+        SELECT COUNT(*) FROM read_articles WHERE user_id = %s
+                """
+        cursor.execute(sql,(user_id,))
+        return cursor.fetchone()["count"]
+
+    @staticmethod
+    def get_most_read_source(user_id):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        sql = """
+              SELECT source, COUNT(*) AS count FROM read_articles WHERE user_id = %s GROUP BY(source) ORDER BY count DESC LIMIT 1;
+              """
+        cursor.execute(sql, (user_id,))
+        fetch = cursor.fetchone()
+        if fetch is None:
+            fetch = "No data found"
+            return fetch
+        else:
+            return fetch["source"]
+    @staticmethod
+    def most_searched_keyword(user_id):
+        conn = db.get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        sql = """
+              SELECT keyword, COUNT(*) AS count FROM search_history WHERE user_id = %s GROUP BY(keyword) ORDER BY count DESC LIMIT 1; 
+              """
+        cursor.execute(sql, (user_id,))
+        fetch = cursor.fetchone()
+        if fetch is None:
+            fetch = "No data found"
+            return fetch
+        else:
+            return fetch["keyword"]
