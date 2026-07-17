@@ -1,6 +1,7 @@
 # WhatsNew 📰
 
-A command-line news aggregator and personalization platform built in Python. WhatsNew lets users browse top headlines, search for articles, save favorites, set topic preferences, and receive AI-powered article recommendations tailored to their reading habits.
+A command-line news aggregation and personalization platform built in Python. 
+WhatsNew lets users browse top headlines, search for articles, save favorites, manage topic preferences, receive AI-powered recommendations, and gain insights into their reading habits.
 
 ---
 
@@ -14,26 +15,42 @@ A command-line news aggregator and personalization platform built in Python. Wha
 
 ### News
 - Browse **top US headlines** powered by the [NewsAPI](https://newsapi.org/)
-- **Search articles** by keyword
-- **Save articles** to your profile for later reading
-- **Configurable page size** — control how many articles are returned per request
+- Search articles by keyword
+- Save articles to your profile
+- Open articles directly in your default web browser
+- Track articles that have been read
+- Configurable page size for search results
 - Articles display title, source, and URL
 
 ### Personalization & Recommendations
-- Set **topic preferences** (e.g. "AI, Sports, UGA") to tailor your feed
+- Store topic preferences in PostgreSQL for persistent personalization
+- Save articles for long-term recommendation history
 - **Content-based recommendation engine** built with:
-  - **pandas** for structured article data processing
-  - **scikit-learn TF-IDF vectorization** to convert article text into numerical representations
-  - **Cosine similarity** to match candidate articles against your saved article history
-- Recommendations work with preferences alone, or are further personalized when saved articles are present
+  - **pandas** for article preprocessing
+  - **scikit-learn TF-IDF vectorization**
+  - **Cosine similarity** for personalized recommendations
+- Recommendations adapt based on both user preferences and saved articles
+- **Gemini LLM-powered recommendation explanations** summarize why articles were recommended and identify common themes
 
+### Reading Analytics
+- Personalized "Wrapped"-style reading summary including:
+  - Total Articles read
+  - Total Articles saved
+  - Favorite news source
+  - Most Saved Source from Saved Articles list
+  - Most Read Source 
+  - Most Searched Keyword
 ### Profile Management
-- Change email (with verification code confirmation)
-- Change password (with email verification)
+- Change email (with verification)
+- Change password (with verification)
 - Change username
 - Upload a profile picture
 - Delete account
-- Forgot password and forgot username flows — both secured with email verification
+- Forgot password and forgot username flows secured with email verification
+
+### Deployment
+- Fully containerized using **Docker** and **Docker Compose**
+- Consistent setup across Windows, macOS, and Linux
 
 ---
 
@@ -42,28 +59,34 @@ A command-line news aggregator and personalization platform built in Python. Wha
 | Layer | Technology |
 |---|---|
 | Language | Python 3 |
-| Database | PostgreSQL (via psycopg2) |
-| Password Security | Argon2 (argon2-cffi) |
+| Database | PostgreSQL (psycopg2) |
+| Machine Learning | pandas, scikit-learn |
+| LLM | Google Gemini (google-genai) |
+| Password Security | Argon2 |
 | News Data | NewsAPI |
 | Email | SendGrid |
-| Data Processing | pandas |
-| Machine Learning | scikit-learn |
+| Browser Integration | webbrowser |
+| Containerization | Docker, Docker Compose |
 | Unique IDs | UUID4 |
 
 ---
 
 ## Project Structure
 
-```
+```text
 WhatsNew/
-├── main.py               # Entry point, navigation, and dashboard
-├── Login.py              # Authentication, account creation, login flow
-├── Profile.py            # Profile management, account settings, recovery flows
-├── NewsManagment.py      # Article fetching, saving, searching, DataFrame conversion
-├── Recommendations.py    # TF-IDF recommendation engine
-├── Password_Security.py  # Argon2 hashing and verification
-├── Email_Maintance.py    # SendGrid email verification
-└── .env                  # Environment variables (not included in repo)
+├── main.py
+├── Login.py
+├── Profile.py
+├── NewsManagment.py
+├── Recommendations.py
+├── LLM_Generation.py      # Gemini recommendation explanations
+├── db.py                  # Database helper functions
+├── Password_Security.py
+├── Email_Maintance.py
+├── docker-compose.yml
+├── Dockerfile
+└── .env
 ```
 
 ---
@@ -71,64 +94,54 @@ WhatsNew/
 ## Setup & Installation
 
 ### Prerequisites
-- Python 3.10+
-- PostgreSQL
-- A [NewsAPI](https://newsapi.org/) API key
-- A [SendGrid](https://sendgrid.com/) API key
 
-### Installation
+- Docker Desktop
+- NewsAPI API Key
+- SendGrid API Key
+- Google Gemini API Key
+
+### Clone the Repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/zderival/WhatsNew.git
 cd WhatsNew
-
-# Install dependencies
-pip install -r requirements.txt
 ```
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the project root.
 
-```
+```env
 NEWS_API_KEY=your_newsapi_key
 SENDGRID_API_KEY=your_sendgrid_key
-Database_Password=your_postgres_password
+GEMINI_API_KEY=your_gemini_api_key
+
+Database_Name=whats_new
+Database_Username=postgres
+Database_Password=your_password
+host=db - for Docker host= localhost - for running local
 ```
 
-### Database
+### Run with Docker
 
-Create a PostgreSQL database called `whats_new` and set up the `user` table:
-
-```sql
-CREATE TABLE "user" (
-    id UUID PRIMARY KEY,
-    username VARCHAR(32) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    dob DATE NOT NULL
-);
-```
-
-### Run
+Build and start the application.
 
 ```bash
-python main.py
+docker compose up --build
 ```
 
----
+To stop the application:
 
-## Roadmap
+```bash
+docker compose down
+```
 
-- [ ] Persist saved articles and preferences to the database
-- [ ] GUI (planned for future release)
-- [ ] Expanded recommendation model using article descriptions and authors
-- [ ] Article filtering by date range
+Docker automatically creates and configures the PostgreSQL database, so no manual SQL setup is required.
 
 ---
 
 ## Author
 
-**Zachary Derival**  
-GitHub: [@zderival](https://github.com/zderival)
+**Zachary Derival**
+
+GitHub: https://github.com/zderival
