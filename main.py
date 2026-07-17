@@ -54,7 +54,7 @@ def prompt_open_article(ids,user):
             print("Invalid input, please try again.")
 
 def prompt_llm_generation():
-    prompt = input("Would you like an explanation on why you received these recommendations?(yes/no): )").lower()
+    prompt = input("Would you like an explanation on why you received these recommendations?(yes/no): ").lower()
     if prompt == "yes":
         return True
     return None
