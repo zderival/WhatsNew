@@ -2,7 +2,7 @@ import os
 import psycopg2
 
 _conn = None
-#This is a singleton: an instance of something that gets shared everywhere
+# This is a singleton: an instance of something that gets shared everywhere
 def get_connection():
     global _conn
     if _conn is None:

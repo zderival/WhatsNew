@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from NewsManagment import fetch_articles, articles_to_df
+import numpy as np
 import os
 
 api_key = os.getenv("NEWS_API_KEY")
@@ -72,7 +73,7 @@ def get_recommendations(saved_articles,potential_articles):
     # potential_vectors - A set of vectors from user's preference list, one vector per saved article
 
     # 5. Build user profile and score candidates
-    user_profile = saved_vectors.mean(axis=0)
+    user_profile = np.asarray(saved_vectors.mean(axis=0))
     # Averages all the saved article vectors together into one vector.
     # This represents the user's overall taste in a mathematical summary of what they tend to read.
     # axis=0 means average column by column (word by word) across all rows (articles).

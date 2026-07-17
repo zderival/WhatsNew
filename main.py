@@ -11,6 +11,7 @@ import db
 from NewsManagment import NewsManager, api_url2, articles_isEmpty, Article
 from Recomendations import get_recommendations, fetch_potential_articles
 from dotenv import load_dotenv
+from LLM_Generation import llm_generation
 load_dotenv()
 def prompt_save_articles(ids,user):
     ask_to_save_articles = input("Are there articles you wish to save? (yes/no): ").strip().lower()
@@ -51,6 +52,12 @@ def prompt_open_article(ids,user):
                 break
         except ValueError:
             print("Invalid input, please try again.")
+
+def prompt_llm_generation():
+    prompt = input("Would you like an explanation on why you received these recommendations?(yes/no): )").lower()
+    if prompt == "yes":
+        return True
+    return None
 
 
 if __name__ == "__main__":
@@ -132,7 +139,7 @@ if __name__ == "__main__":
                 case 2:
                     conn = db.get_connection()
                     cursor = conn.cursor(cursor_factory= RealDictCursor)
-                    search = input("What would you like to find? ")
+                    search = input("What would you like to find? ").lower()
                     ids = {}
                     articles = NewsManager.search_articles(search,user.profile.page_size)
                     sql = """
@@ -172,8 +179,8 @@ if __name__ == "__main__":
                             ids[i] = articles
                         prompt_open_article(ids, user)
                         save_article_choice = input("Enter spaced article numbers to remove OR type 'no' if you "
-                                                    "do not wish to remove articles: ").strip().lower()
-                        if save_article_choice == "no":
+                                                    "do not wish to remove articles: ").strip().lower().split()
+                        if save_article_choice == ["no"]:
                             break
                         NewsManager.remove_articles(save_article_choice,ids)
                         continue
@@ -209,6 +216,9 @@ if __name__ == "__main__":
                         continue
                     for i, article in enumerate(recommendations,start =1):
                         print(f"{i}) {article}")
+                    llm_generation_prompt = prompt_llm_generation()
+                    if llm_generation_prompt:
+                        print(llm_generation(preferences_list,saved_articles_list,recommendations))
                     rec_ids = {i: article for i, article in enumerate(recommendations, start=1)}
                     prompt_open_article(rec_ids, user)
                     prompt_save_articles(rec_ids, user)
