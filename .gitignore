@@ -3,3 +3,5 @@ usa_housing_prices.csv
 Homepage.py
 SearchPage.py
 SavedArticlesPage.py
+__pycache__/
+.env
